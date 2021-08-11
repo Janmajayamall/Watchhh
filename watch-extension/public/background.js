@@ -3,6 +3,9 @@ var currentTab;
 chrome.tabs.query({ url: "https://twitter.com/*" }, function (tabArray) {
 	console.log("It got here");
 	currentTab = tabArray[0];
+	if (!currentTab) {
+		return;
+	}
 	chrome.debugger.attach(
 		{
 			//debug at current tab

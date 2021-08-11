@@ -1,4 +1,3 @@
-import logo from './logo.svg';
 import './App.css';
 import { createIDX } from './utils/idx';
 import { DID } from 'dids';
@@ -10,19 +9,39 @@ import { definitions } from './utils/constants';
 import { useState, useEffect } from 'react';
 import Card from '@material-ui/core/Card';
 import Profile from './components/Profile';
-import { uploadTweet } from './utils/web3StorageFunctions';
+import { getTweetsData, uploadTweet } from './utils/web3StorageFunctions';
+import { Typography } from '@material-ui/core';
+import WelcomeHeader from './components/WelcomeHeader';
+import MainDashboard from './components/MainDashboard';
 
 function App() {
   const [appState, setAppState] = useState(0);
+  const [userAuthenticated, setUserAuthenticated] = useState(false);
 
   const [profile, setProfile] = useState(null);
   const [web3StorageObj, setWeb3StorageObj] = useState(null);
+  const [directMessages, setDirectMessages] = useState([]);
+  const [tweets, setTweets] = useState([]);
 
   const [syncInProgress, setSyncInProgress] = useState(false);
+  const [directMessagesUpdateInProgress, setDirectMessagesUpdateInProgress] =
+    useState(false);
 
   useEffect(() => {
     authenticate();
   }, []);
+
+  useEffect(() => {
+    checkBaseSetup();
+  }, [userAuthenticated]);
+
+  useEffect(() => {
+    if (!profile || !web3StorageObj) {
+      return;
+    }
+    setupTweetsFeed();
+    getDirectMessages();
+  }, [profile, web3StorageObj]);
 
   async function authenticate() {
     const [ceramic, provider] = await Promise.all([
@@ -44,24 +63,15 @@ function App() {
     window.did = did;
     await ceramic.setDID(did);
     const idx = createIDX(ceramic);
-    checkState();
+    setUserAuthenticated(true);
   }
 
-  async function checkState() {
+  async function checkBaseSetup() {
     if (!window.idx) {
       authenticate();
       return;
     }
 
-    if (await checkBaseSetup()) {
-      setAppState(1);
-      return;
-    }
-    setupTweetsFeed();
-    setAppState(2);
-  }
-
-  async function checkBaseSetup() {
     const [profile, encryptedWeb3Storage] = await Promise.all([
       window.idx?.get(definitions.TWITTER_PROFILE),
       window.idx?.get(definitions.WEB3_STORAGE),
@@ -76,8 +86,12 @@ function App() {
       console.log(decryptedWeb3Storage, ' decrypted key');
       setWeb3StorageObj(decryptedWeb3Storage);
     }
-    console.log(profile, encryptedWeb3Storage, ' this is here');
-    return !profile || !encryptedWeb3Storage;
+
+    if (profile && encryptedWeb3Storage) {
+      setAppState(2);
+    } else {
+      setAppState(1);
+    }
   }
 
   async function updateBaseSetup(profile, web3StorageObj) {
@@ -91,17 +105,25 @@ function App() {
     );
     await window.idx?.set(definitions.WEB3_STORAGE, encryptedWeb3StorageObj);
 
-    checkState();
+    checkBaseSetup();
   }
 
   async function addTweet(tweetObj) {
     console.log('Sync started');
     setSyncInProgress(true);
-    const tweetId = tweetObj.data.create_tweet.tweet_results.result.rest_id;
-    const tweetCID = await uploadTweet(tweetObj, tweetId, web3StorageObj);
+    const tweetData = tweetObj.data.create_tweet.tweet_results.result.legacy;
+    const tweetCID = await uploadTweet(
+      { ...tweetData, id: tweetData.id_str },
+      tweetData.id_str,
+      web3StorageObj,
+    );
 
     var tweetsObj = await getTweetsObj();
-    tweetsObj.tweets.push({ tweetCID: tweetCID });
+    console.log(tweetsObj);
+    tweetsObj.tweets = [
+      { tweetCID: tweetCID, tweetId: tweetData.id_str },
+      ...tweetsObj.tweets,
+    ];
     await window.idx?.set(definitions.TWITTER_TWEETS_LIST, tweetsObj);
 
     await setupTweetsFeed();
@@ -111,9 +133,33 @@ function App() {
   }
   window.addTweet = addTweet;
 
+  async function addTweetsInBatch(tweetBatch) {
+    setSyncInProgress(true);
+
+    const tweets = [];
+    for (let i = 0; i < tweetBatch.length; i++) {
+      const tweetCID = await uploadTweet(
+        tweetBatch[i],
+        tweetBatch[i].id_str,
+        web3StorageObj,
+      );
+      tweets.push({ tweetCID: tweetCID, tweetId: tweetBatch[i].id_str });
+    }
+    var tweetsObj = await getTweetsObj();
+    tweetsObj.tweets = [...tweetsObj.tweets, ...tweets];
+    await window.idx?.set(definitions.TWITTER_TWEETS_LIST, tweetsObj);
+
+    await setupTweetsFeed();
+
+    setSyncInProgress(false);
+  }
+
   async function setupTweetsFeed() {
     const tweetsObj = await getTweetsObj();
-    console.log('setting up the tweets ', tweetsObj.tweets);
+    console.log(tweetsObj);
+    // console.log(tweetsObj, ' tweetsObj', web3StorageObj);
+    // await getTweetsData(tweetsObj.tweets, web3StorageObj);
+    setTweets(tweetsObj.tweets);
   }
 
   async function getTweetsObj() {
@@ -121,51 +167,72 @@ function App() {
     return tweetsObj ? tweetsObj : { tweets: [] };
   }
 
+  async function getDirectMessages() {
+    var encryptedDirectMessages = await window.idx?.get(
+      definitions.TWITTER_DIRECT_MESSAGES,
+    );
+    encryptedDirectMessages = encryptedDirectMessages
+      ? encryptedDirectMessages
+      : [];
+
+    let messages = [];
+    for (let i = 0; i < encryptedDirectMessages.length; i++) {
+      messages.push(
+        await window.did?.decryptDagJWE(encryptedDirectMessages[i]),
+      );
+    }
+
+    setDirectMessages(messages);
+  }
+
+  async function updateDirectMessages(messages) {
+    setDirectMessagesUpdateInProgress(true);
+
+    var encryptMessages = [];
+    for (let i = 0; i < messages.length; i++) {
+      encryptMessages.push(
+        await window.did?.createDagJWE(messages[i], [window.did?.id]),
+      );
+    }
+    await window.idx?.set(definitions.TWITTER_DIRECT_MESSAGES, encryptMessages);
+
+    await getDirectMessages();
+
+    setDirectMessagesUpdateInProgress(false);
+  }
+
   if (appState === 2) {
     return (
       <div className="App" style={{ backgroundColor: '#000000' }}>
-        <button
-          onClick={() => {
-            uploadTweet(JSON.stringify({ you: 'me' }), web3StorageObj);
-          }}
-        >
-          Click here
-        </button>
+        <MainDashboard
+          tweets={tweets}
+          addTweetsInBatch={addTweetsInBatch}
+          syncInProgress={syncInProgress}
+          directMessages={directMessages}
+          updateDirectMessages={updateDirectMessages}
+          directMessagesUpdateInProgress={directMessagesUpdateInProgress}
+        />
+      </div>
+    );
+  }
+
+  if (appState === 1) {
+    return (
+      <div className="App" style={{ backgroundColor: '#000000' }}>
+        <Profile
+          updateBaseSetup={updateBaseSetup}
+          userProfile={profile}
+          userWeb3StorageObj={web3StorageObj}
+        />
       </div>
     );
   }
 
   return (
     <div className="App" style={{ backgroundColor: '#000000' }}>
-      {appState === 1 ? (
-        <Profile
-          updateBaseSetup={updateBaseSetup}
-          userProfile={profile}
-          userWeb3StorageObj={web3StorageObj}
-        />
-      ) : (
-        <div />
-      )}
+      <WelcomeHeader />
     </div>
   );
 }
 
 export default App;
-
-// <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//         <button onClick={()=>{authenticate()}}>
-//           Auth
-//         </button>
-//       </header>

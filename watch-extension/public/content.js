@@ -1,5 +1,5 @@
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	console.log(request);
+	console.log(request, "hey ");
 	if (request.identification == "newTweet") {
 		console.log(request);
 		var actualCode = `

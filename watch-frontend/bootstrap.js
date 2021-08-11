@@ -59,21 +59,40 @@ const Web3StorageSchema = {
   required: ['protected', 'iv', 'ciphertext', 'tag'],
 };
 
-const TwitterTweetSchema = {
+const TwitterDirectMessagesSchema = {
   $schema: 'http://json-schema.org/draft-07/schema#',
-  title: 'TwitterTweet',
   type: 'object',
+  title: 'TwitterDirectMessages',
   properties: {
-    tweetCID: {
-      type: 'string',
-      title: 'tweetCID',
-      maxLength: 4000,
+    messages: {
+      type: 'array',
+      items: { $ref: '#/definitions/DirectMessage' },
     },
-    date: {
-      type: 'string',
-      format: 'date-time',
-      title: 'date',
-      maxLength: 30,
+  },
+  additionalProperties: false,
+  required: ['messages'],
+  definitions: {
+    DirectMessage: {
+      type: 'object',
+      properties: {
+        protected: { type: 'string' },
+        iv: { type: 'string' },
+        ciphertext: { type: 'string' },
+        tag: { type: 'string' },
+        aad: { type: 'string' },
+        recipients: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              header: { type: 'object' },
+              encrypted_key: { type: 'string' },
+            },
+            required: ['header', 'encrypted_key'],
+          },
+        },
+      },
+      required: ['protected', 'iv', 'ciphertext', 'tag'],
     },
   },
 };
@@ -95,6 +114,11 @@ const TwitterTweetsListSchema = {
             title: 'tweetCID',
             maxLength: 4000,
           },
+          tweetId: {
+            type: 'string',
+            title: 'tweetID',
+            maxLength: 4000,
+          },
           date: {
             type: 'string',
             format: 'date-time',
@@ -107,58 +131,6 @@ const TwitterTweetsListSchema = {
     },
   },
 };
-
-// const NoteSchema = {
-//   $schema: 'http://json-schema.org/draft-07/schema#',
-//   title: 'Note',
-//   type: 'object',
-//   properties: {
-//     date: {
-//       type: 'string',
-//       format: 'date-time',
-//       title: 'date',
-//       maxLength: 30,
-//     },
-//     text: {
-//       type: 'string',
-//       title: 'text',
-//       maxLength: 4000,
-//     },
-//   },
-// }
-
-// const NotesListSchema = {
-//   $schema: 'http://json-schema.org/draft-07/schema#',
-//   title: 'NotesList',
-//   type: 'object',
-//   properties: {
-//     notes: {
-//       type: 'array',
-//       title: 'notes',
-//       items: {
-//         type: 'object',
-//         title: 'NoteItem',
-//         properties: {
-//           id: {
-//             $ref: '#/definitions/CeramicStreamId',
-//           },
-//           title: {
-//             type: 'string',
-//             title: 'title',
-//             maxLength: 100,
-//           },
-//         },
-//       },
-//     },
-//   },
-//   definitions: {
-//     CeramicStreamId: {
-//       type: 'string',
-//       pattern: '^ceramic://.+(\\\\?version=.+)?',
-//       maxLength: 150,
-//     },
-//   },
-// }
 
 async function run() {
   // The seed must be provided as an environment variable
@@ -177,12 +149,17 @@ async function run() {
   await ceramic.did.authenticate();
 
   // Publish the two schemas
-  const [twitterProfileSchema, twitterTweetsListSchema, web3StorageSchema] =
-    await Promise.all([
-      publishSchema(ceramic, { content: TwitterProfileSchema }),
-      publishSchema(ceramic, { content: TwitterTweetsListSchema }),
-      publishSchema(ceramic, { content: Web3StorageSchema }),
-    ]);
+  const [
+    twitterProfileSchema,
+    twitterTweetsListSchema,
+    web3StorageSchema,
+    twitterDirectMessagesSchema,
+  ] = await Promise.all([
+    publishSchema(ceramic, { content: TwitterProfileSchema }),
+    publishSchema(ceramic, { content: TwitterTweetsListSchema }),
+    publishSchema(ceramic, { content: Web3StorageSchema }),
+    publishSchema(ceramic, { content: TwitterDirectMessagesSchema }),
+  ]);
 
   // Create the definition using the created schema ID
   const twitterTweetsListDefinition = await createDefinition(ceramic, {
@@ -200,6 +177,12 @@ async function run() {
     description: 'token for web3 storage',
     schema: web3StorageSchema.commitId.toUrl(),
   });
+  console.log("here's the issue");
+  // const twitterDirectMessagesDefinition = await createDefinition(ceramic, {
+  //   name: 'twitterDirectMessages',
+  //   description: 'twitter direct messages',
+  //   schema: twitterDirectMessagesSchema,
+  // });
 
   // Write config to JSON file
   const config = {
@@ -207,11 +190,13 @@ async function run() {
       twitterTweetsList: twitterTweetsListDefinition.id.toString(),
       twitterProfile: twitterProfileDefinition.id.toString(),
       web3Storage: web3StorageDefinition.id.toString(),
+      // twitterDirectMessages: twitterDirectMessagesDefinition.id.toString(),
     },
     schemas: {
       TwitterTweetsList: twitterTweetsListSchema.commitId.toUrl(),
       TwitterProfile: twitterProfileSchema.commitId.toUrl(),
       Web3Storage: web3StorageSchema.commitId.toUrl(),
+      TwitterDirectMessages: twitterDirectMessagesSchema.commitId.toUrl(),
     },
   };
   await writeFile('./src/utils/config.json', JSON.stringify(config));

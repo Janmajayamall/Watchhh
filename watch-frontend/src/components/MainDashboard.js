@@ -8,6 +8,7 @@ import {
   formatOldTweetsArray,
 } from '../utils/helperFunctions';
 import Divider from '@material-ui/core/Divider';
+import MessagesModal from './MessagesModal';
 
 function MainDashboard({
   tweets,
@@ -22,6 +23,8 @@ function MainDashboard({
   var uploadDMsFileReader = null;
   var uploadOldTweetsReader = null;
 
+  const [messageModalState, setMessageModalState] = useState(false);
+
   function handleDMsFileContent(e) {
     if (!uploadDMsFileReader) {
       return;
@@ -30,8 +33,7 @@ function MainDashboard({
     const userMessages = formatMessageArray(
       JSON.parse(uploadDMsFileReader.result),
     );
-    console.log(userMessages);
-    return;
+
     updateDirectMessages(userMessages);
 
     uploadDMsFileReader = null;
@@ -109,6 +111,15 @@ function MainDashboard({
           >
             Archive Old Tweets
           </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setMessageModalState(true);
+            }}
+            style={{ margin: 5 }}
+          >
+            View DM
+          </Button>
         </div>
         {directMessagesUpdateInProgress ? (
           <div style={styles.updateDivs}>
@@ -131,7 +142,7 @@ function MainDashboard({
             }}
           >
             {syncInProgress
-              ? "Your tweets are syncing fren, please be patient DON'T RERESH"
+              ? "Your tweets are syncing fren, DON'T RERESH"
               : 'Your tweets are in sync'}
           </Typography>
           {syncInProgress ? (
@@ -181,6 +192,13 @@ function MainDashboard({
           );
         })}
       </div>
+      <MessagesModal
+        open={messageModalState}
+        handleClose={() => {
+          setMessageModalState(false);
+        }}
+        messages={directMessages}
+      />
     </div>
   );
 }

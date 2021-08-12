@@ -5,7 +5,7 @@
   "dependencies": {
     "@3id/connect": "^0.1.6",
     "@ceramicnetwork/3id-did-resolver": "^1.2.7",
-    "@ceramicnetwork/cli": "^1.1.0",
+    "@ceramicnetwork/cli": "^1.2.1",
     "@ceramicnetwork/http-client": "^1.0.7",
     "@ceramicstudio/idx": "^0.12.1",
     "@ceramicstudio/idx-tools": "^0.11.0",

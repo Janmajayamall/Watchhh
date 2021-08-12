@@ -1,1 +1,14 @@
-{"definitions":{"twitterTweetsList":"kjzl6cwe1jw149gzlsb3w2ukg0hu94w9i51rl0v1ehy6u5c09j42jb8a8feqkyx","twitterProfile":"kjzl6cwe1jw148hkc051p8o69jauuw2jm0i2hkkmx9azkihlgn0ps9zl20m99ii","web3Storage":"kjzl6cwe1jw145bzt32n73wn9m5buuqho5zo3mf95tmrusbwyereadqrzp1c1oc"},"schemas":{"TwitterTweetsList":"ceramic://k3y52l7qbv1frygcwwc272ecy9dqmss79he8v05c18nw40rdm1ly0096ngf18hgjk","TwitterProfile":"ceramic://k3y52l7qbv1fry6pfdtpzg7yloavle9dc3hfzp98znbfeq910pxmer6hpsqwpq3uo","Web3Storage":"ceramic://k3y52l7qbv1frxl64mvqh6b056l3k7zwqh42t78vqzlhnwpucnl1r8pjmbuoucagw","TwitterDirectMessages":"ceramic://k3y52l7qbv1frxyq0w1aoa4wpsp9kz3b0k9n98ga5haozhc0hpn5ez5o5owdncmio"}}
+{
+  "definitions": {
+    "twitterTweetsList": "kjzl6cwe1jw149gzlsb3w2ukg0hu94w9i51rl0v1ehy6u5c09j42jb8a8feqkyx",
+    "twitterProfile": "kjzl6cwe1jw148hkc051p8o69jauuw2jm0i2hkkmx9azkihlgn0ps9zl20m99ii",
+    "web3Storage": "kjzl6cwe1jw145bzt32n73wn9m5buuqho5zo3mf95tmrusbwyereadqrzp1c1oc",
+    "twitterDirectMessages": "kjzl6cwe1jw149vg1zzymnl3722b4kn37y6bs8z99jnmd1g90jlx3rfz1zq0qah"
+  },
+  "schemas": {
+    "TwitterTweetsList": "ceramic://k3y52l7qbv1frygcwwc272ecy9dqmss79he8v05c18nw40rdm1ly0096ngf18hgjk",
+    "TwitterProfile": "ceramic://k3y52l7qbv1fry6pfdtpzg7yloavle9dc3hfzp98znbfeq910pxmer6hpsqwpq3uo",
+    "Web3Storage": "ceramic://k3y52l7qbv1frxl64mvqh6b056l3k7zwqh42t78vqzlhnwpucnl1r8pjmbuoucagw",
+    "TwitterDirectMessages": "ceramic://k3y52l7qbv1frxyq0w1aoa4wpsp9kz3b0k9n98ga5haozhc0hpn5ez5o5owdncmio"
+  }
+}

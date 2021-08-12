@@ -28,7 +28,7 @@ function App() {
     useState(false);
 
   useEffect(() => {
-    authenticate();
+    // authenticate();
   }, []);
 
   useEffect(() => {
@@ -83,7 +83,7 @@ function App() {
       const decryptedWeb3Storage = await window.did?.decryptDagJWE(
         encryptedWeb3Storage,
       );
-      console.log(decryptedWeb3Storage, ' decrypted key');
+
       setWeb3StorageObj(decryptedWeb3Storage);
     }
 
@@ -109,7 +109,6 @@ function App() {
   }
 
   async function addTweet(tweetObj) {
-    console.log('Sync started');
     setSyncInProgress(true);
     const tweetData = tweetObj.data.create_tweet.tweet_results.result.legacy;
     const tweetCID = await uploadTweet(
@@ -119,7 +118,6 @@ function App() {
     );
 
     var tweetsObj = await getTweetsObj();
-    console.log(tweetsObj);
     tweetsObj.tweets = [
       { tweetCID: tweetCID, tweetId: tweetData.id_str },
       ...tweetsObj.tweets,
@@ -129,7 +127,6 @@ function App() {
     await setupTweetsFeed();
 
     setSyncInProgress(false);
-    console.log('Sync finished');
   }
   window.addTweet = addTweet;
 
@@ -156,7 +153,6 @@ function App() {
 
   async function setupTweetsFeed() {
     const tweetsObj = await getTweetsObj();
-    console.log(tweetsObj);
     // console.log(tweetsObj, ' tweetsObj', web3StorageObj);
     // await getTweetsData(tweetsObj.tweets, web3StorageObj);
     setTweets(tweetsObj.tweets);
@@ -171,14 +167,15 @@ function App() {
     var encryptedDirectMessages = await window.idx?.get(
       definitions.TWITTER_DIRECT_MESSAGES,
     );
+
     encryptedDirectMessages = encryptedDirectMessages
       ? encryptedDirectMessages
-      : [];
+      : { messages: [] };
 
     let messages = [];
-    for (let i = 0; i < encryptedDirectMessages.length; i++) {
+    for (let i = 0; i < encryptedDirectMessages.messages.length; i++) {
       messages.push(
-        await window.did?.decryptDagJWE(encryptedDirectMessages[i]),
+        await window.did?.decryptDagJWE(encryptedDirectMessages.messages[i]),
       );
     }
 
@@ -190,11 +187,15 @@ function App() {
 
     var encryptMessages = [];
     for (let i = 0; i < messages.length; i++) {
-      encryptMessages.push(
-        await window.did?.createDagJWE(messages[i], [window.did?.id]),
-      );
+      const encryptedMessage = await window.did?.createDagJWE(messages[i], [
+        window.did?.id,
+      ]);
+      encryptMessages.push(encryptedMessage);
     }
-    await window.idx?.set(definitions.TWITTER_DIRECT_MESSAGES, encryptMessages);
+
+    await window.idx?.set(definitions.TWITTER_DIRECT_MESSAGES, {
+      messages: encryptMessages,
+    });
 
     await getDirectMessages();
 

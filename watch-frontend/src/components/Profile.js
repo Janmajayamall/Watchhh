@@ -43,7 +43,6 @@ function Profile({ updateBaseSetup, userProfile, userWeb3StorageObj }) {
           value={profile.username}
           placeholder={'Username'}
           onChange={(e) => {
-            console.log(e.target.value);
             setProfile({ ...profile, username: e.target.value });
           }}
         />

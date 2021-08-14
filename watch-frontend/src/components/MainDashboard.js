@@ -153,7 +153,18 @@ function MainDashboard({
             />
           )}
         </div>
-
+        {tweets.length === 0 ? (
+          <Typography
+            style={{
+              fontSize: 50,
+              color: '#ffffff',
+              alignSelf: 'center',
+              marginTop: 50,
+            }}
+          >
+            0 archived tweets
+          </Typography>
+        ) : undefined}
         {tweets.map((tweet) => {
           return (
             <div

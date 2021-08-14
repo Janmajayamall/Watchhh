@@ -23,7 +23,7 @@ export async function uploadTweet(tweetObj, fileName, web3StorageObj) {
 //       console.log(
 //         `failed to get ${tweets[i].tweetCID} - [${response.status}] ${response.statusText}`,
 //       );
-//     }
+//     2}
 
 //     const files = await response.files();
 //     console.log(files);

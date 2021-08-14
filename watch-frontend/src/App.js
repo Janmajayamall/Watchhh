@@ -26,6 +26,7 @@ function App() {
   const [syncInProgress, setSyncInProgress] = useState(false);
   const [directMessagesUpdateInProgress, setDirectMessagesUpdateInProgress] =
     useState(false);
+  const [updatingBaseSetupState, setUpdatingBaseSetupState] = useState(false);
 
   useEffect(() => {
     // authenticate();
@@ -95,6 +96,8 @@ function App() {
   }
 
   async function updateBaseSetup(profile, web3StorageObj) {
+    setUpdatingBaseSetupState(true);
+
     // update profile
     await window.idx?.set(definitions.TWITTER_PROFILE, profile);
 
@@ -106,6 +109,8 @@ function App() {
     await window.idx?.set(definitions.WEB3_STORAGE, encryptedWeb3StorageObj);
 
     checkBaseSetup();
+
+    setUpdatingBaseSetupState(false);
   }
 
   async function addTweet(tweetObj) {
@@ -224,6 +229,7 @@ function App() {
           updateBaseSetup={updateBaseSetup}
           userProfile={profile}
           userWeb3StorageObj={web3StorageObj}
+          updatingBaseSetupState={updatingBaseSetupState}
         />
       </div>
     );

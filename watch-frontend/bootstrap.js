@@ -9,7 +9,7 @@ const { DID } = require('dids');
 const fromString = require('uint8arrays/from-string');
 const { TileDocument } = require('@ceramicnetwork/stream-tile');
 
-const CERAMIC_URL = 'https://ceramic-clay.3boxlabs.com';
+const CERAMIC_URL = 'http://localhost:7007';
 
 const TwitterProfileSchema = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -178,11 +178,11 @@ async function run() {
     description: 'token for web3 storage',
     schema: web3StorageSchema.commitId.toUrl(),
   });
-  const twitterDirectMessagesDefinition = await createDefinition(ceramic, {
-    name: 'twitterDirectMessages',
-    description: 'twitter direct messages',
-    schema: twitterDirectMessagesSchema,
-  });
+  // const twitterDirectMessagesDefinition = await createDefinition(ceramic, {
+  //   name: 'twitterDirectMessages',
+  //   description: 'twitter direct messages',
+  //   schema: twitterDirectMessagesSchema,
+  // });
 
   // Write config to JSON file
   const config = {
@@ -191,7 +191,7 @@ async function run() {
       twitterProfile: twitterProfileDefinition.id.toString(),
       web3Storage: web3StorageDefinition.id.toString(),
       twitterDirectMessages:
-        'kjzl6cwe1jw149vg1zzymnl3722b4kn37y6bs8z99jnmd1g90jlx3rfz1zq0qah',
+        'kjzl6cwe1jw1496wzp1mi62fjyx23yq5ez82l3ohjnt6rj777hiaz5exrl2v9eh',
       // twitterDirectMessages: twitterDirectMessagesDefinition.id.toString(),
     },
     schemas: {

@@ -4,8 +4,14 @@ import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import { Typography } from '@material-ui/core';
 import TextInput from './TextInput';
+import LinearProgress from '@material-ui/core/LinearProgress';
 
-function Profile({ updateBaseSetup, userProfile, userWeb3StorageObj }) {
+function Profile({
+  updateBaseSetup,
+  userProfile,
+  userWeb3StorageObj,
+  updatingBaseSetupState,
+}) {
   const [profile, setProfile] = useState(
     userProfile ? userProfile : { username: '' },
   );
@@ -57,7 +63,6 @@ function Profile({ updateBaseSetup, userProfile, userWeb3StorageObj }) {
 
         <Button
           variant="contained"
-          color="primary"
           disableElevation
           onClick={() => {
             if (profile.username !== '' && web3StorageObj.token !== '') {
@@ -68,6 +73,10 @@ function Profile({ updateBaseSetup, userProfile, userWeb3StorageObj }) {
         >
           Update
         </Button>
+
+        {updatingBaseSetupState ? (
+          <LinearProgress color="secondary" style={{ width: '100%' }} />
+        ) : undefined}
       </Card>
     </div>
   );
